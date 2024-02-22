@@ -12,10 +12,10 @@ effects.
 
 ## Extracting and Cleaning Data
  -- fill this in -- 
+
 ## Analysis and Visualization for Obtaining Statistics
- -- fill this in -- 
+ -- fill this in --
 
 ## Making Predictions
  -- fill this in -- 
-
 
