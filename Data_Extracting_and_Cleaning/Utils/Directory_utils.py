@@ -12,8 +12,6 @@ def Get_current_directory():
 def To_directory(directory_path_from_main=None):
     assert directory_path_from_main is not None, "No directory path was inputted."
     assert isinstance(directory_path_from_main, str), "directory_path_from_main must be of type str."
-    parent_dir = Get_Parent_Directory()
-    os.chdir(parent_dir)
     directory = os.path.join(Get_current_directory(), directory_path_from_main)
 
     try:
