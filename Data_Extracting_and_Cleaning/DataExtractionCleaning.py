@@ -1,13 +1,12 @@
 """
 Created on February 22, 2024
 
-Written by: David Belman and Mahesh
-Ananthakrishnan Rameshkumar.
+Written by: David Belman and Mahesh Ananthakrishnan Rameshkumar.
 
 The goal of this script is to extract data from the wildfire database
 and properly prapare the data for use within our final project. The data we
 are using in our project has been sourced from:
-
+https://open.alberta.ca/opendata/wildfire-data-1996-2005
 """
 
 from Utils import Directory_utils as Dir
@@ -39,15 +38,62 @@ def Get_all_data(file_name):
             Data frame that we can now use for analysis.
     """
     assert isinstance(file_name, str), "database filename must be a string."
+
+    #this section automatically pulls the data from 'file_name' that is stored in 'Dataset/' and returns to the
     original_dir = Dir.Get_current_directory()
     target_dir = 'Dataset'
     Dir.To_directory(target_dir)
-    df = pd.read_csv(file_name) # Moving to the main branch (ECE-143-Wildfire-Project)
-    Dir.To_directory(original_dir) # Returning to original dir
+    df = pd.read_csv(file_name)
+    Dir.To_directory(original_dir)
 
-    # formatting additional the date and time columns if needed:
-    df[['date', 'time']] = df['ex_fs_date'].str.split(' ', expand=True)
-    # df.drop(['ex_fs_date'], axis=1, inplace=True)
+    df = df.drop( columns= ['fire_year', 'permit_detail_desc'] )
+    dateColumns = [ 'assessment_datetime', 'fire_start_date','discovered_date', 
+                   'reported_date', 'start_for_fire_date', 'fire_fighting_start_date',
+                    'bh_fs_date', 'uc_fs_date', 'ex_fs_date', 'to_fs_date' ]
+    df[dateColumns] = df[dateColumns].apply( pd.to_datetime )
+
+    # Filling out the nan values
+    df['fire_start_date'].fillna( df['start_for_fire_date'], inplace= True )
+    df['det_agent_type'].fillna("Unknown", inplace= True)
+    df['det_agent'].fillna("Unknow", inplace= True)
+    df['fire_fighting_start_size'].fillna(0, inplace= True)
+    df['true_cause'].fillna( -1, inplace= True )
+    df['fire_position_on_slope'].fillna( "Unknown", inplace= True )
+    df['initial_action_by'].fillna( "Unknown", inplace= True )
+    df['industry_identifier_desc'].fillna("Non Industrial / Other Industry")
+    df['responsible_group_desc'].fillna( "Unknown", inplace= True )
+    df['activity_class'].fillna("Unknown", inplace= True)
+    df['weather_conditions_over_fire'].fillna( "Unknown", inplace= True )
+
+    # Dropping this column as it seems to be redundant from the dataset dictionary
+    df = df.drop(columns= ['start_for_fire_date'])
+
+    # Coding the general cause according to the data dictionary
+    genCauseMap = { "Other Industry":0, "Lightning":1, "Resident":2, 
+                 "Forest Industry":3, "Railroad":4, "Prescribed Fire":5, 
+                 "Recreation":6, "Incendiary":7, "Miscellaneous Known":8,
+                 "Power Line Industry":9, "Oil & Gas Industry":10, "Restart":11,
+                 "Undetermined":12}
+    df["general_cause_desc"] = df["general_cause_desc"].map( genCauseMap )
+
+    # Coding true cause
+    trueCauseMap = { 'Abandoned Fire':1, 'Burning Substance':7, 'Unsafe Fire':2, 
+                    'Arson Suspected':12, 'Insufficient Buffer':5, 'Hot Exhaust':8, 
+                    'Unpredictable Event':9, 'Unattended Fire':4, 'Arson Known':10, 
+                    'High Hazard':11, 'Insufficient Resources':3, 'Flammable Fluids':6, 
+                    'Permit Related':0}  
+    df['true_cause'] = df['true_cause'].map(trueCauseMap)
+    df['fire_type'] = df['fire_type'].str.strip()
+    df['fire_type'].replace( '', 'Unknown', inplace= True )
+
+    # Replacing nans in fuel_type and other_fuel_type with appropriate values.
+    nullRow = df[ df['fuel_type'].isnull() & df['other_fuel_type'].isnull() ].index
+    df.loc[nullRow, ['fuel_type', 'other_fuel_type']] = "Unknown"
+    nullFuelRow = df[ df['fuel_type'].isnull() & df['other_fuel_type'].notnull() ].index
+    df.loc[nullFuelRow, ['fuel_type']] = "Other Fuel"
+    nullOtherRow = df[ df['fuel_type'].notnull() & df['other_fuel_type'].isnull() ].index
+    df.loc[nullOtherRow, ['other_fuel_type']] = "Known Fuel"
+    
     return df
 
 def Get_all_df_columns(df, printing = False):
@@ -60,8 +106,9 @@ def Get_all_df_columns(df, printing = False):
 
         printing - bool
             Decides whether we would like to see all columns printed in the
-            terminal as well. Can be useful for troubleshooting the data frame
-            you are currently working with.
+            terminal as well. Can be useful for ensuring the data frame
+            columns you are currently working with has the columns you expect
+            it to have.
 
     Returns:
         df_columns_list - list
@@ -115,7 +162,7 @@ def Get_total_number_of_df_columns(df):
 def Checking_column_data(df, stopping_point = 3):
     """
     currently using this to check if certain columns are mainly empty or not
-    from an initial glance. Used for quick testing of the data set entries.
+    from an initial glance. Used for quick testing of the first the data set entries.
 
     Parameters:
         df - pd.DataFrame
@@ -129,7 +176,9 @@ def Checking_column_data(df, stopping_point = 3):
     assert isinstance(df, pd.DataFrame), "Input must be a pandas dataframe."
     assert all(isinstance(name, str) for name in df.columns), "Dataframe column names must be of type str."
     assert isinstance(stopping_point, int) & stopping_point > 0, "Stopping_point must be an integer and > zero."
-    column_names_list = list(df.columns)  # Get all column names directly from the DataFrame
+
+    # Get all column names directly from the DataFrame
+    column_names_list = list(df.columns)
     for name in column_names_list:
         print(f"Column: '{name}'")
         for index, value in enumerate(df[name]):
@@ -176,7 +225,7 @@ def Create_df_with(unfiltered_df, column_name_list):
 def Get_valid_fire_names_df(unfiltered_df = None):
     """
     Extracts the existing fire names from the dataframe. Plans are to use it
-    to create a lookup table for the fire names based on each fire's unique
+    to create a lookup dataframe for the fire names based on each fire's unique
     fire ID.
 
     Parameters:
@@ -187,14 +236,13 @@ def Get_valid_fire_names_df(unfiltered_df = None):
          filtered_df - pd.DataFrame
             Data frame that will be used to create the lookup table.
     """
-    assert unfiltered_df is not None, "Insert a dataframe."
+    assert unfiltered_df is not None, "Insert a pandas dataframe."
     assert all(isinstance(column_name, str) for column_name in unfiltered_df.columns), "Not all column names of the dataframe are strings."
 
     columns_to_keep = ['fire_name', 'fire_number'] # can be adjusted if needed
 
     filtered_df = unfiltered_df[columns_to_keep]
     filtered_df = filtered_df[filtered_df['fire_name'].notna() & (unfiltered_df['fire_name'].str.strip() != "")]
-    # filtered_df.set_index('fire_number', inplace=True)
     return filtered_df
 
 def Get_only_complete_data(unfiltered_df):
@@ -212,7 +260,6 @@ def Get_only_complete_data(unfiltered_df):
             the value is set to zero.
    """
     columns_list = Get_all_df_columns(unfiltered_df)
-    filtered_df = pd.DataFrame()
 
     # Create a mask for rows with complete data in all columns
     row_mask = unfiltered_df[columns_list].notna().all(axis=1)
@@ -238,9 +285,7 @@ def Get_burn_area_radius(hectares = None):
 
     digits_after_decimal = 4
     area_in_meters = round(hectares * 10000, digits_after_decimal)
-    # print("area in meters:", area_in_meters)
     radius = round(math.sqrt(area_in_meters/math.pi), digits_after_decimal)
-    # print("radius we are returning is:", radius)
     return radius
 
 def displaying_burn_area(latitude=None, longitude=None, radius=None, zoom = 20, plotting_circle = True):
@@ -264,9 +309,12 @@ def displaying_burn_area(latitude=None, longitude=None, radius=None, zoom = 20, 
     """
     assert latitude is not None and longitude is not None, "Must provide both a latitude and longitude."
     assert radius is not None and radius > 0, "Must provide a radius parameter greater than 0."
+    isinstance(zoom, (int, float)), "Must provide a valid zoom value."
+    assert isinstance(plotting_circle, bool), "Must provide a bool for plotting_circle."
+
+    # this section aims to properly auto adjust the zoom when creating burn_area
     attenuation = 1
     max_zoom = 20
-
     if plotting_circle:
         if radius < 30:
             zoom = max_zoom
@@ -281,8 +329,10 @@ def displaying_burn_area(latitude=None, longitude=None, radius=None, zoom = 20, 
                 zoom = round(zoom, 5)
             zoom = min(zoom, 18.35)
 
+    # create the map
     Mymap = folium.Map(location=[latitude, longitude], zoom_start=zoom)
 
+    # creating the burn area circle
     if plotting_circle:
         folium.Circle(
             location=[latitude, longitude],
@@ -292,6 +342,7 @@ def displaying_burn_area(latitude=None, longitude=None, radius=None, zoom = 20, 
             fill_color='red',
             fill_opacity=0.2
         ).add_to(Mymap)
+
     Mymap.save('burn_area.html')
 
 def stop():
@@ -301,63 +352,43 @@ def stop():
     exit(1)
 
 
-
-
+#testing the functions written above:
 print("getting data...")
 df = Get_all_data("af-historic-wildfires-1996-2005-data.csv")
 print("finished getting data.\n\n")
 
 print("getting column names:")
 all_columns = Get_all_df_columns(df, True)
-print("---------- done printing and getting column names ----------\n\n")
+print("---------- finnished printing and getting column names ----------\n\n")
 
 print("checking columns data:")
-Checking_column_data(df, 5) # checking to see if some columns are in fact empty.
-print("---------- done! ----------\n\n")
-
+Checking_column_data(df, 5)
+print("---------- finished checking columns data! ----------\n\n")
 
 
 # from initial tests, these are columns that could be majority empty. Fire name is a special case and not included here
-checking = ['industry_identifier_desc', 'true_cause', 'permit_detail_desc',
+checking = ['industry_identifier_desc', 'true_cause',
             'fire_fighting_start_date', 'fire_fighting_start_size', 'other_fuel_type',
             'other_fuel_type', 'to_fs_date', 'to_hectares', 'to_hectares']
-# take out the hours from the fire_star_date column?
-# further inspect 'det_agent_type' & 'det_agent' and see if we can decode it for the others.
-# figure out what the fire class rating is
-# ensure 'general_cause_desc' is all filled out.
-# 'industry_identifier_desc' this is mainly empty as far as I can see. need to look into what the columns means.
-# ensure that 'responsible_group_desc' is fully filled out. it Nan is present, put 'unknown' in its place
-# ensure that 'activity_class' is fully filled out. it Nan is present, put 'unknown' in its place
-# ensure that 'true_cause'  is fully filled out. it Nan is present, put 'unknown' in its place
-# further look into 'permit_detail_desc' --> could we use this to track fires made by people without permite to be in the area?
-# clean up 'fire_start_date' into a datetime column? Ensure the column is fully filled out.
-#ensure 'discovered_date' is fully filled out.
-# ensure 'reported_date' is fully filled out.
-# ensure 'start_for_fire_date' is fully filled out. otherwise, put unknown.
-# ensure 'fire_fighting_start_date' is fully filled out. otherwise, put unknown.
-# ensure 'fire_fighting_start_size' is fully filled out. otherwise, make it nan.
-# ensure 'initial_action_by' is filled out. otherwise, put unknown.
-# ensure 'fire_type' is fully filled out. otherwise, put unknown.
-# not sure if 'fire_position_on_slope' is needed. ask mahesh about deleting it.
-# ensure 'weather_conditions_over_fire' is fully filled out. otherwise, put unknown.
-# ensure 'fuel_type' is fully filled out. otherwise, put unknown.
-# ensure 'other_fuel_type' is fully filled out. if nan, put unknown.
-# look into what 'bh_fs_date' is. determine if it's something we think we can delete.
-# continue working on the rest of the columns, starting with bh_hectares.
 
-
-temp = pd.DataFrame()
+print("creating a filtered df:")
 temp = Create_df_with(df, checking)
 Checking_column_data(temp, 3)
+print("---------- finished creating a filtered df! ----------\n\n")
 
+print("getting valid fire names:")
 names = Get_valid_fire_names_df(df)
 print("\nfire names and their fire number:\n", names)
+print("---------- finished getting valid fire names! ----------\n\n")
 
+print("getting filtered df:")
 filtered_df = Get_only_complete_data(df)
+print("---------- finished getting filtered df! ----------\n\n")
 
 #testing the burn area map:
-hectares = 1
+hectares = 100
 print("hectares:", hectares)
 radius = Get_burn_area_radius(hectares)
 print("radius:", radius, "m")
 displaying_burn_area(32.8812, -117.2344, radius)
+
