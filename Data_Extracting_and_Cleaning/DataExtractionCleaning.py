@@ -9,7 +9,7 @@ are using in our project has been sourced from:
 https://open.alberta.ca/opendata/wildfire-data-1996-2005
 """
 
-from Utils import Directory_utils as Dir
+from Data_Extracting_and_Cleaning.Utils import Directory_utils as Dir
 import pandas as pd
 import math
 import folium
@@ -41,8 +41,10 @@ def Get_all_data(file_name):
 
     #this section automatically pulls the data from 'file_name' that is stored in 'Dataset/' and returns to the
     original_dir = Dir.Get_current_directory()
-    target_dir = 'Dataset'
+    target_dir = 'ECE-143-Wildfire-Project//Dataset'
     Dir.To_directory(target_dir)
+    #target_dir = 'Dataset'
+    #Dir.To_directory(target_dir)
     df = pd.read_csv(file_name)
     Dir.To_directory(original_dir)
 
@@ -351,7 +353,7 @@ def stop():
     """
     exit(1)
 
-
+'''
 #testing the functions written above:
 print("getting data...")
 df = Get_all_data("af-historic-wildfires-1996-2005-data.csv")
@@ -392,3 +394,4 @@ radius = Get_burn_area_radius(hectares)
 print("radius:", radius, "m")
 displaying_burn_area(32.8812, -117.2344, radius)
 
+'''

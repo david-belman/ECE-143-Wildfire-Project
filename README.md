@@ -1,17 +1,17 @@
 # ECE-143-Wildfire-Project
+
 The Group Repository containing everyone's code.
 
-**team members:** David Belman, Aiden Rosen, Mahesh <br> 
-Ananthakrishnan Rameshkumar, Boran Jia, & Jacob Brown <br>
+**team members:** David Belman, Aiden Rosen, Mahesh  
+Ananthakrishnan Rameshkumar, Boran Jia, & Jacob Brown  
 
+## Objective  
 
-## Objective: 
-The Purpose of this project is to Perform comprehensive <br> 
-analysis on forest fires, analyzing cause, size of fire, seasonal <br> effects, spatial effects and terrain 
-effects. 
+The Purpose of this project is to Perform comprehensive analysis on forest fires, analyzing cause, size of fire, seasonal  effects, spatial effects and terrain effects.  
 
 ## Extracting and Cleaning Data
- -- fill this in -- 
+
+ -- fill this in --
 
     The fire year can be fiscal or calendar year so it has been dropped. 
 
@@ -44,7 +44,7 @@ effects.
     unknown. If the fuel_type is null it is set to "Other Fuel" and if other_fuel_type
     is null it is set to "Known fuel".
 
-    There are few columns that rarely have nan values, it might be reasonable 
+    There are few columns that rarely have non-nan values, it might be reasonable 
     to exclude those rows as they might not have much of an impact.
 
     Two remaining tasks that might need consulting with the team would be:
@@ -56,8 +56,9 @@ effects.
           feel this would take more time and Mahesh can help with this analysis.
 
 ## Analysis and Visualization for Obtaining Statistics
+
  -- fill this in --
 
 ## Making Predictions
- -- fill this in -- 
 
+ -- fill this in --
