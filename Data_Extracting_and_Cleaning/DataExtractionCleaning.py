@@ -66,6 +66,7 @@ def Get_all_data(file_name):
     df['responsible_group_desc'].fillna( "Unknown", inplace= True )
     df['activity_class'].fillna("Unknown", inplace= True)
     df['weather_conditions_over_fire'].fillna( "Unknown", inplace= True )
+    df['general_cause_desc'].fillna("Restart", inplace= True )
 
     # Dropping this column as it seems to be redundant from the dataset dictionary
     df = df.drop(columns= ['start_for_fire_date'])
@@ -76,7 +77,8 @@ def Get_all_data(file_name):
                  "Recreation":6, "Incendiary":7, "Miscellaneous Known":8,
                  "Power Line Industry":9, "Oil & Gas Industry":10, "Restart":11,
                  "Undetermined":12}
-    df["general_cause_desc"] = df["general_cause_desc"].map( genCauseMap )
+    #this line is commented out because I couldnt find a reason where i would want numbers instead of names sry
+    #df["general_cause_desc"] = df["general_cause_desc"].map( genCauseMap )
 
     # Coding true cause
     trueCauseMap = { 'Abandoned Fire':1, 'Burning Substance':7, 'Unsafe Fire':2, 
