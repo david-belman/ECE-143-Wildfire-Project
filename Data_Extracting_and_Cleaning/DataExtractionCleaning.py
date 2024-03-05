@@ -73,12 +73,18 @@ def Get_all_data(file_name):
 
     # Coding the general cause according to the data dictionary
     genCauseMap = { "Other Industry":0, "Lightning":1, "Resident":2, 
-                 "Forest Industry":3, "Railroad":4, "Prescribed Fire":5, 
-                 "Recreation":6, "Incendiary":7, "Miscellaneous Known":8,
-                 "Power Line Industry":9, "Oil & Gas Industry":10, "Restart":11,
-                 "Undetermined":12}
+                "Forest Industry":3, "Railroad":4, "Prescribed Fire":5, 
+                "Recreation":6, "Incendiary":7, "Miscellaneous Known":8,
+                "Power Line Industry":9, "Oil & Gas Industry":10, "Restart":11,
+                "Undetermined":12}
     #this line is commented out because I couldnt find a reason where i would want numbers instead of names sry
     #df["general_cause_desc"] = df["general_cause_desc"].map( genCauseMap )
+
+    fuelTypeMap = { "C1": "spruce-lichen woodland",'C2': 'boreal spruce', 'C3': 'mature Jack or Lodgepole Pine','C4': 'immature Jack or Lodgepole Pine',
+                'C5': 'Red and White Pine', 'C6': 'conifer plantation Deciduous', 'D1': 'leafless Aspen Mixedwood', 'M1': 'boreal mixedwood - leafless',
+                'M2': 'boreal mixedwood - green', 'M3': 'dead Balsam fir mixedwood - leafless', 'M4': 'dead Balsam fir mixedwood-green Slash',
+                'S1': 'Jack or Lodgepole Pine slash', 'S2': 'White Spruce - Balsam slash Grass', 'O1a': 'matted grass', 'O1b': 'standing grass'}
+    df["fuel_type"] = df["fuel_type"].map(fuelTypeMap)
 
     # Coding true cause
     trueCauseMap = { 'Abandoned Fire':1, 'Burning Substance':7, 'Unsafe Fire':2, 
