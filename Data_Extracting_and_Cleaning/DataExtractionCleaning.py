@@ -59,7 +59,7 @@ def Get_all_data(file_name):
     df['det_agent_type'].fillna("Unknown", inplace= True)
     df['det_agent'].fillna("Unknow", inplace= True)
     df['fire_fighting_start_size'].fillna(0, inplace= True)
-    df['true_cause'].fillna( -1, inplace= True )
+    #df['true_cause'].fillna( -1, inplace= True )
     df['fire_position_on_slope'].fillna( "Unknown", inplace= True )
     df['initial_action_by'].fillna( "Unknown", inplace= True )
     df['industry_identifier_desc'].fillna("Non Industrial / Other Industry")
@@ -86,7 +86,7 @@ def Get_all_data(file_name):
                     'Unpredictable Event':9, 'Unattended Fire':4, 'Arson Known':10, 
                     'High Hazard':11, 'Insufficient Resources':3, 'Flammable Fluids':6, 
                     'Permit Related':0}  
-    df['true_cause'] = df['true_cause'].map(trueCauseMap)
+    #df['true_cause'] = df['true_cause'].map(trueCauseMap)
     df['fire_type'] = df['fire_type'].str.strip()
     df['fire_type'].replace( '', 'Unknown', inplace= True )
 
