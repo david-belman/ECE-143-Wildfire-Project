@@ -14,11 +14,6 @@ import matplotlib.pyplot  as plt
 import numpy as np
 #import altair as alt
 #from altair import Chart
-trueCauseMap = { 'Abandoned Fire':1, 'Burning Substance':7, 'Unsafe Fire':2, 
-                    'Arson Suspected':12, 'Insufficient Buffer':5, 'Hot Exhaust':8, 
-                    'Unpredictable Event':9, 'Unattended Fire':4, 'Arson Known':10, 
-                    'High Hazard':11, 'Insufficient Resources':3, 'Flammable Fluids':6, 
-                    'Permit Related':0}  
 # ensure to include Pyarrow when installing pandas(?):
 """
 DeprecationWarning: 
@@ -56,7 +51,6 @@ def plot_graph_of_series(series, graph_type = "pie", title = "",axes = ["",""] )
     fig, ax = plt.subplots()
     match graph_type:
         case "pie":
-            '''wedgeprops={"linewidth": 1, "edgecolor": "white"},'''
             ax.pie(series.values, radius=3, center=(4, 4),  
                 labels = series.index, labeldistance = 1.3, autopct='%1.1f%%')
         case "bar":
@@ -64,7 +58,7 @@ def plot_graph_of_series(series, graph_type = "pie", title = "",axes = ["",""] )
             plt.xticks(range(len(series.index)), series.index, rotation='horizontal')
             ax.set_xlabel(axes[0])
             ax.set_ylabel(axes[1])
-        case "barh":
+        case "barh":#horizontal bar graphs
             plt.barh(series.index, series.values, edgecolor="white")
             #plt.xticks(range(len(series.index)), series.index, rotation='vertical')
             ax.set_xlabel(axes[0])
@@ -102,13 +96,13 @@ def get_operation_of_series_based_on_another_series(dataframe, column_names, op=
     for type in counts.index:
         temp_query = dataframe.query(f'{column_names[0]} == @type')
         match op:
-            case "mean":
+            case "mean":#computes mean
                 operation_result = temp_query.loc[:,column_names[1]].mean(axis=0)
             case "sum":
                 operation_result = temp_query.loc[:,column_names[1]].sum(axis=0)
             case "norm":
                 operation_result = counts[type]/sum_of_counts * 100
-        if None != threshold:
+        if None != threshold:#implements threshold to remove values below it
             if operation_result > threshold:
                 output.append(operation_result)
                 out_indices.append(type)
