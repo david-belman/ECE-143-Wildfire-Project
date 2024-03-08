@@ -40,7 +40,7 @@ def plot_graph_of_series(series, graph_type = "pie", title = "",axes = ["",""] )
         series - pd.series
             Should be a pandas series containing names on the left side and a count on the right side
         Graph_type - str
-            Type of graph you want. Currently pie or bar
+            Type of graph you want. Currently pie, bar, or barh
         title - str
             TItle of the graph
         Axis - list of str
@@ -61,7 +61,12 @@ def plot_graph_of_series(series, graph_type = "pie", title = "",axes = ["",""] )
                 labels = series.index, labeldistance = 1.3, autopct='%1.1f%%')
         case "bar":
             plt.bar(range(len(series.index)), series.values, width=1, edgecolor="white", linewidth=0.7)
-            plt.xticks(range(len(series.index)), series.index, rotation='vertical')
+            plt.xticks(range(len(series.index)), series.index, rotation='horizontal')
+            ax.set_xlabel(axes[0])
+            ax.set_ylabel(axes[1])
+        case "barh":
+            plt.barh(series.index, series.values, edgecolor="white")
+            #plt.xticks(range(len(series.index)), series.index, rotation='vertical')
             ax.set_xlabel(axes[0])
             ax.set_ylabel(axes[1])
     ax.set_title(title, pad =8.0)
@@ -69,9 +74,9 @@ def plot_graph_of_series(series, graph_type = "pie", title = "",axes = ["",""] )
 
 
 
-def get_operation_of_series_based_on_another_series(dataframe, column_names, op="mean"):
+def get_operation_of_series_based_on_another_series(dataframe, column_names, op="mean", threshold= None):
     """
-    Finds the operation of average_series corresponding to the indices in value_count. Current Operations are mean and sum
+    Finds the operation of average_series corresponding to the indices in value_count. Current Operations are mean, sum, and norm(normalize)
 
     Parameters:
     ------------
@@ -81,6 +86,8 @@ def get_operation_of_series_based_on_another_series(dataframe, column_names, op=
             The titles of the columns such that the correspond to [the column you want to find the average of the values in here, the column containing the numbers to average]
         op - str
             Type of operation you want performed
+        threshold - Float
+            The lowest value before we cut it out of the output
     Returns:
     ----------
         a pd.Series that contains the names in the first column as an index and the operation in the value column 
@@ -88,15 +95,28 @@ def get_operation_of_series_based_on_another_series(dataframe, column_names, op=
     assert isinstance(dataframe, pd.DataFrame), "dataframe input must be a pandas Dataframe datatype"
     assert isinstance(column_names, list) and len(column_names) == 2 and all([isinstance(i,str) for i in column_names]), "axes input must be a list of string"
     counts = dataframe[column_names[0]].value_counts(sort=False)
-    type_averages = []
+    output = []
+    out_indices = []
+    sum_of_counts = counts.values.sum()
+    other = 0
     for type in counts.index:
         temp_query = dataframe.query(f'{column_names[0]} == @type')
         match op:
             case "mean":
-                type_averages.append(temp_query.loc[:,column_names[1]].mean(axis=0))
+                operation_result = temp_query.loc[:,column_names[1]].mean(axis=0)
             case "sum":
-                type_averages.append(temp_query.loc[:,column_names[1]].sum(axis=0))
-    return pd.Series(data = type_averages, index = counts.index)
+                operation_result = temp_query.loc[:,column_names[1]].sum(axis=0)
+            case "norm":
+                operation_result = counts[type]/sum_of_counts * 100
+        if None != threshold:
+            if operation_result > threshold:
+                output.append(operation_result)
+                out_indices.append(type)
+        else:
+            output.append(operation_result)
+            out_indices.append(type)
+
+    return pd.Series(data = output, index = out_indices)
 
 
 
