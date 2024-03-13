@@ -61,4 +61,23 @@ The Purpose of this project is to Perform comprehensive analysis on forest fires
 
 ## Making Predictions
 
- -- fill this in --
+We apply three machine learning algorithms to predict the size of fire
+Support Vector Machines
+Gradient Boosting Regressor
+Random Forest
+
+Selection of feature variables and target variables
+Random Forest & Gradient Boosting Regressor：
+  X: fire_year， fire_location_latitude，
+ fire_location_longitude， fuel_type
+  Y：assessment_hectares
+
+Support Vector Machines
+ X：numeric features 
+(i.e. features with data type float64 or int64)
+Y：assessment_hectares
+
+Model evaluation criteria
+Mean square error (MSE)
+coefficient of determination (R²)
+
