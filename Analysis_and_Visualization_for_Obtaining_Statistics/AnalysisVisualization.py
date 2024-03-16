@@ -202,3 +202,26 @@ def pca_display(dataframe, column_names):
     plt.plot(np.cumsum(explained_variance))
     plt.xlim(0, 5)
     plt.show
+
+def plot_correlation(dataframe, column_names):
+        
+        """
+        Given two columns plots the correlation or the contingency table 
+        between the two columns
+        """
+
+        assert isinstance(dataframe, pd.DataFrame), "Please provide a dataframe"
+        assert isinstance(column_names, (list, tuple)), "Provide the column names in list or tuple format"
+        assert len(column_names) == 2, "Provide two columns"
+        assert all( isinstance(col, str) and len(col) > 0 and col in dataframe.columns for col in column_names ), "Provide valid column names"
+
+        dataframe[column_names[0]] = dataframe[column_names[0]].fillna('Other')
+        # Create a contingency table
+        contingency_table = pd.crosstab(dataframe[column_names[1]], dataframe[column_names[0]])
+        # Plot heatmap
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(contingency_table, annot=True, cmap='YlGnBu', fmt='d')
+        plt.title('Relationship between Fire Type and Fuel Type')
+        plt.xlabel('Fuel Type')
+        plt.ylabel('Fire Type')
+        plt.show()
